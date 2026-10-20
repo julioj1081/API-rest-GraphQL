@@ -1,70 +1,227 @@
-# Getting Started with Create React App
+# Frontend - React Client (Messages CRUD)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Cliente **React** para consumir la API GraphQL del backend, permitiendo crear, listar, actualizar y eliminar mensajes.
 
-## Available Scripts
+## Stack tecnológico
 
-In the project directory, you can run:
+| Tecnología | Versión | Uso |
+|---|---|---|
+| [React](https://react.dev/) | ^19.3.1 | Librería de UI |
+| [Create React App](https://create-react-app.dev/) | react-scripts 5 | Toolchain de build |
+| [Apollo Client](https://www.apollographql.com/docs/react) | ^4.3.5 | Cliente GraphQL (cache, queries, mutations) |
+| [graphql](https://graphql.org/) | ^17 | Ejecución de operaciones GraphQL |
+| [React Router](https://reactrouter.com/) | ^7 | Enrutamiento del lado del cliente |
+| [Bootswatch (lux)](https://bootswatch.com/lux/) | ^5 | Tema de Bootstrap 5 |
+| [bootstrap-icons](https://icons.getbootstrap.com/) | ^1 | Iconos |
 
-### `npm start`
+## Requisitos previos
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Node.js** >= 18
+- **Backend corriendo** en `http://localhost:3100/graphql` (ver [Backend README](../Backend/README.md))
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Instalación y ejecución
 
-### `npm test`
+```bash
+cd client
+npm install
+npm start
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+El cliente levanta en:
 
-### `npm run build`
+```
+http://localhost:3000
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+> ⚠️ **Importante:** ejecutar primero el **backend** y después el **frontend**.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Estructura del proyecto
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+client/
+├── public/
+│   ├── index.html                 # HTML base (título: "React App")
+│   └── ...
+└── src/
+    ├── index.js                   # Punto de entrada: Apollo Client + ApolloProvider + CSS globales
+    ├── App.js                     # Router: define todas las rutas de la aplicación
+    ├── App.css                    # (CRA boilerplate, no se usa)
+    ├── index.css                  # Estilos personalizados (cards, títulos, formulario)
+    └── components/
+        ├── Navbar.js              # Barra de navegación (Bootstrap)
+        ├── MessageList.js         # Listado de mensajes (query + delete)
+        ├── MessageForm.js         # Formulario de creación (mutation create)
+        └── MessageFormUpdate.js   # Formulario de edición (mutation update)
+```
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Cómo está construido
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 1. Configuración de Apollo Client (`src/index.js`)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+El cliente GraphQL se configura una sola vez y se inyecta en el árbol de React con `ApolloProvider`:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```js
+import { ApolloClient, InMemoryCache, HttpLink, ApolloProvider } from "@apollo/client";
 
-## Learn More
+const client = new ApolloClient({
+  link: new HttpLink({ uri: "http://localhost:3100/graphql" }),
+  cache: new InMemoryCache(),
+});
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+root.render(
+  <React.StrictMode>
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>
+  </React.StrictMode>
+);
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+También se importan aquí los estilos globales:
 
-### Code Splitting
+```js
+import "bootswatch/dist/lux/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "./index.css";
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+![Apollo Client Setup](./images/apollo-setup.png)
 
-### Analyzing the Bundle Size
+### 2. Enrutamiento (`src/App.js`)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Se utiliza **React Router v7** con `BrowserRouter`:
 
-### Making a Progressive Web App
+| Ruta | Componente | Descripción |
+|---|---|---|
+| `/` | `MessageList` | Listado principal de mensajes |
+| `/new-message` | `MessageForm` | Formulario para crear un mensaje |
+| `/update-message/:id/:title/:content/:author` | `MessageFormUpdate` | Formulario para editar (pasa datos por URL) |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```jsx
+<BrowserRouter>
+  <Navigation />
+  <div className="container p-4">
+    <Routes>
+      <Route path="/" element={<MessageList />} />
+      <Route path="/new-message" element={<MessageForm />} />
+      <Route
+        path="/update-message/:id/:title/:content/:author"
+        element={<MessageFormUpdate />}
+      />
+    </Routes>
+  </div>
+</BrowserRouter>
+```
 
-### Advanced Configuration
+![Rutas de la aplicación](./images/rutas.png)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 3. Componentes
 
-### Deployment
+#### `Navbar.js` — Barra de navegación
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- Navbar de Bootstrap con tema oscuro (`bg-primary`).
+- Enlaces a `/` ("MessageList") y `/new-message` ("Nuevo mensaje").
 
-### `npm run build` fails to minify
+![Navbar](./images/navbar.png)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+#### `MessageList.js` — Listado de mensajes
+
+- Ejecuta una **query** con `useQuery` para obtener todos los mensajes.
+- Renderiza cada mensaje en una **card** con título, contenido y autor (pill).
+- Botón 🗑️ **eliminar**: ejecuta la mutation `DELETE_MESSAGE` con `refetchQueries` para refrescar la lista.
+- Botón ✏️ **editar**: navega a `/update-message/...` pasando los datos codificados con `encodeURIComponent` en la URL.
+- Maneja estados de `loading` ("Cargando mensajes...") y `error` ("Error al cargar mensajes").
+
+```graphql
+query {
+  messages {
+    _id
+    title
+    content
+    author
+  }
+}
+```
+
+![Listado de mensajes](./images/message-list.png)
+
+#### `MessageForm.js` — Crear mensaje
+
+- Formulario controlado con `useState` (title, content, author).
+- Ejecuta la mutation `CREATE_MESSAGE` al enviar.
+- Redirige al listado con `window.location.href = "/"` después de crear.
+
+```graphql
+mutation ($title: String!, $content: String, $author: String!) {
+  createMessage(title: $title, content: $content, author: $author) {
+    _id
+  }
+}
+```
+
+![Formulario de creación](./images/message-form.png)
+
+#### `MessageFormUpdate.js` — Editar mensaje
+
+- Lee los parámetros de la URL con `useParams()` para pre-llenar el formulario.
+- Ejecuta la mutation `UPDATE_MESSAGE` y navega de vuelta con `navigate("/")`.
+
+```graphql
+mutation ($id: ID!, $title: String!, $content: String, $author: String!) {
+  updateMessage(id: $id, title: $title, content: $content, author: $author) {
+    _id
+    title
+    content
+    author
+  }
+}
+```
+
+![Formulario de edición](./images/message-form-update.png)
+
+---
+
+## Manejo de estado
+
+No se usa Redux, Zustand ni Context. El estado se maneja con:
+
+- **`useState`** — estado local de cada componente (formularios, loading).
+- **Apollo Client cache (`InMemoryCache`)** — caché normalizada de datos GraphQL.
+- **`refetchQueries`** — vuelve a ejecutar la query de listado tras un `delete`/`create` para mantener la UI actualizada.
+
+## Estilos
+
+| Fuente | Archivo | Contenido |
+|---|---|---|
+| Bootswatch **lux** (Bootstrap 5) | `bootswatch/dist/lux/bootstrap.min.css` | Clases utilitarias (`container`, `card`, `btn`, `row`, etc.) |
+| bootstrap-icons | `bootstrap-icons/font/bootstrap-icons.css` | Iconos (`bi-trash`, `bi-pencil`) |
+| CSS personalizado | `src/index.css` | Fondo `#f4f6f9`, `.page-title`, `.message-card` (borde azul izquierdo + hover lift), `.message-author` (pill), `.form-card` |
+
+![Estilos y tarjetas](./images/estilos.png)
+
+## Scripts disponibles
+
+| Comando | Descripción |
+|---|---|
+| `npm start` | Servidor de desarrollo en `http://localhost:3000` |
+| `npm run build` | Build de producción en `build/` |
+| `npm test` | Ejecuta los tests (CRA/Jest) |
+| `npm run eject` | Expone la configuración de CRA (irreversible) |
+
+## Flujo general de la aplicación
+
+```
+┌─────────────┐   GraphQL (HTTP POST)   ┌──────────────────┐   Mongoose   ┌──────────┐
+│    React     │ ──────────────────────▶ │  GraphQL Yoga    │ ───────────▶ │ MongoDB  │
+│ Apollo Client│ ◀────────────────────── │  :3100/graphql   │ ◀─────────── │ :27017   │
+└─────────────┘        JSON              └──────────────────┘              └──────────┘
+   :3000
+```
+
+1. El usuario interactúa con la UI React (`:3000`).
+2. Apollo Client envía queries/mutations vía HTTP a `http://localhost:3100/graphql`.
+3. GraphQL Yoga resuelve la operación llamando a los resolvers.
+4. Los resolvers interactúan con MongoDB mediante Mongoose.
+5. La respuesta JSON se guarda en el cache de Apollo y la UI se actualiza.
