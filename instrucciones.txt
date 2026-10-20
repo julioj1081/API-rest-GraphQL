@@ -1,0 +1,24 @@
+se ocupo en el backend
+> npm i graphql-yoga y mongoose
+> npm i @babel/cli @babel/core @babel/node @babel/preset-env nodemon -D
+
+se modifica el package.json
+de 
+"scripts": {
+    "dev": "nodemon src/index.js"
+  },
+
+a
+"scripts": {
+    "dev": "nodemon src/index.js --exec babel-node"
+  },
+
+y crear el archivo .babelrc
+
+
+para la UI client
+se agrego
+> npm i react-apollo graphql-tag graphql apollo-boost react-router-dom @apollo/react-hooks bootswatch
+
+
+se requiere ejecutar primero el backend y despues el fronend

@@ -1,0 +1,18 @@
+type Query {
+    ping: String!,
+    messages: [Message!]
+}
+
+type Message{
+    _id: ID!
+    title: String!,
+    content: String!,
+    author: String!
+}
+
+
+type Mutation{
+    createMessage(title: String!, content: String, author: String!): Message
+    deleteMessage(id: ID!): Message
+    updateMessage(id: ID!, title: String!, content: String, author: String!): Message
+}
